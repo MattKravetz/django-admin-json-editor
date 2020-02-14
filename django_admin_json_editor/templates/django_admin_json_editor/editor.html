@@ -4,15 +4,34 @@
     var container = document.getElementById("{{ name }}_editor");
     var options = {{ editor_options|safe }};
     var {{ name }}_editor = new JSONEditor(container, options);
+
+    // For Django 1.7 admin
+    const DJANGO_ADMIN_SAVE_BUTTONS = [
+        "_save",
+        "_addanother",
+        "_continue"
+    ]
+
+    const get_submit_buttons = () => {
+        return DJANGO_ADMIN_SAVE_BUTTONS.map(n => document.getElementsByName(n)[0])
+    }
+
+
+    const set_button_disable_state = error_state => {
+        get_submit_buttons().map(button => button.disabled = error_state)
+    }
+
     JSONEditor.plugins.sceditor.emoticonsEnabled = {{ sceditor }};
     {{ name }}_editor.on('change', function () {
         var errors = {{ name }}_editor.validate();
         if (errors.length) {
             console.log(errors);
+            set_button_disable_state(true) // disable saving if any errors are detected
         }
         else {
             var json = {{ name }}_editor.getValue();
             document.getElementById("id_{{ name }}").value = JSON.stringify(json);
+            set_button_disable_state(false) // re-enable saving
         }
     });
     {% if data %}
